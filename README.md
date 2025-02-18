@@ -34,4 +34,4 @@ https://en.wikipedia.org/wiki/Longest_common_substring
 For implementations see e.g.
 https://github.com/cubicdaiya/onp
 
-See also: https://neil.fraser.name/writing/diff/
+See also: https://neil.fraser.name/writing/diff/ and https://github.com/google/diff-match-patch
