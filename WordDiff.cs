@@ -68,7 +68,7 @@ public class WordDiff
             {
                 // If it disagrees, check if any of the next matchMax words in B agrees
                 matchIndex = -1;
-                for (int i = 0; i < matchMax && i < modifiedList.Count; i++)
+                for (int i = 1; i < matchMax && i < modifiedList.Count; i++)
                 {
                     if (modifiedList[i] == oCurrent)
                     {
@@ -90,7 +90,7 @@ public class WordDiff
                 {
                     // Check if any of the next matchMax words in A agrees
                     matchIndex = -1;
-                    for (int i = 0; i < matchMax && i < originalList.Count; i++)
+                    for (int i = 1; i < matchMax && i < originalList.Count; i++)
                     {
                         if (originalList[i] == mCurrent)
                         {

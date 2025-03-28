@@ -59,7 +59,7 @@ function wordDiff(originalText: string, modifiedText: string): string {
         } else {    //If it disagrees, 
             // check if any of the next matchMax words in B agrees, 
             matchIndex = -1;
-            for (let i = 0; i < matchMax; i++) {
+            for (let i = 1; i < matchMax; i++) {
                 if (modifiedBuffer[i] === oCurrent) {
                     matchIndex = i;
                     break;
@@ -74,7 +74,7 @@ function wordDiff(originalText: string, modifiedText: string): string {
             }
             else { //Check if any of the next matchMax words in A agrees
                 matchIndex = -1;
-                for (let i = 0; i < matchMax; i++) {
+                for (let i = 1; i < matchMax; i++) {
                     if (originalBuffer[i] === mCurrent) {
                         matchIndex = i;
                         break;
