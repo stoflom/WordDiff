@@ -1,5 +1,7 @@
 Function to detect insertions and deletions between two texts
-and to markup the differences with html/other tags.
+and to markup the differences with html/other tags  WordDiffhtml.cs
+
+Alternatively, WordDiffrtf.cs is used to markup text in colors in an rtfTextBox.
 
 It is assumed a nearby (default within 5 words) same word is a match, and the in-between words are insertions or deletions.
 This limits the algorithm to short texts with a small number of differences, where this assumption
