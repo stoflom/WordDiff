@@ -37,6 +37,8 @@ public class WordDiff2
 
                 if (oCurrent == mCurrent)
                 {
+                    // If both words are the same, append them as normal text
+                  
                     AppendText(richTextBox, oCurrent, Operation.Same, true);
                     originalList.RemoveAt(0);
                     modifiedList.RemoveAt(0);
@@ -47,7 +49,7 @@ public class WordDiff2
                     int matchIndex = FindMatchIndex(modifiedList, oCurrent);
                     if (matchIndex > -1)
                     {
-                        InsertWords(richTextBox, modifiedList, matchIndex, Colors.Green, true);
+                        InsertWords(richTextBox, modifiedList, matchIndex, true);
                         lastOperation = Operation.Insert;
                     }
                     else
@@ -55,25 +57,27 @@ public class WordDiff2
                         matchIndex = FindMatchIndex(originalList, mCurrent);
                         if (matchIndex > -1)
                         {
-                            DeleteWords(richTextBox, originalList, matchIndex, Colors.Red, true);
+                            DeleteWords(richTextBox, originalList, matchIndex, true);
                             lastOperation = Operation.Delete;
                         }
                         else
                         {
                             if (oCurrent != null)
                             {
-                                AppendText(richTextBox, oCurrent, Operation.Delete, lastOperation == Operation.Insert);
+                                AppendText(richTextBox, oCurrent, Operation.Delete, lastOperation == Operation.Delete);
                                 originalList.RemoveAt(0);
                                 lastOperation = Operation.Delete;
                             }
                             if (mCurrent != null)
                             {
-                                AppendText(richTextBox, mCurrent, Operation.Insert, lastOperation == Operation.Delete);
+                                AppendText(richTextBox, mCurrent, Operation.Insert, lastOperation == Operation.Insert);
                                 modifiedList.RemoveAt(0);
                                 lastOperation = Operation.Insert;
                             }
                         }
                     }
+                    //Add a space
+                    AppendText(richTextBox, " ", lastOperation, false);
                 }
             }
         }
@@ -91,7 +95,7 @@ public class WordDiff2
         return -1;
     }
 
-    private static void InsertWords(RichTextBox richTextBox, List<string> list, int count, Color color, bool addSpace)
+    private static void InsertWords(RichTextBox richTextBox, List<string> list, int count, bool addSpace)
     {
         for (int i = 0; i < count; i++)
         {
@@ -100,7 +104,7 @@ public class WordDiff2
         }
     }
 
-    private static void DeleteWords(RichTextBox richTextBox, List<string> list, int count, Color color, bool addSpace)
+    private static void DeleteWords(RichTextBox richTextBox, List<string> list, int count, bool addSpace)
     {
         for (int i = 0; i < count; i++)
         {
@@ -133,14 +137,7 @@ public class WordDiff2
                     textRange.ApplyPropertyValue(Inline.TextDecorationsProperty, TextDecorations.Strikethrough);
                     break;
             }
-            
+
         }
     }
 }
-
-
-
-
-
-
-
