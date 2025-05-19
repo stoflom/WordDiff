@@ -10,9 +10,7 @@
 //It is intended for highlighting short diffences in database entries, not for comparing long texts.
 //If the text contains multiple occurrences of the same word, the algorithm may not work as expected.
 
-//C Lombard 4 Feb 2025
-
-function wordDiff(originalText: string, modifiedText: string): string {
+export function wordDiff(originalText: string, modifiedText: string): string {
 
     // regex to split the text into words
     const regx = /\s+/;       //For wordDiff split on spaces
@@ -25,8 +23,10 @@ function wordDiff(originalText: string, modifiedText: string): string {
     const delClose = "</del>";
     const insClose = "</ins>";
 
-    const originalBuffer = originalText.split(regx);
-    const modifiedBuffer = modifiedText.split(regx);
+    // Trim inputs and split into words, filtering out empty strings
+    const originalBuffer = originalText.trim().split(regx).filter(Boolean);
+    const modifiedBuffer = modifiedText.trim().split(regx).filter(Boolean);
+
 
     let inserting = false;
     let deleting = false;
@@ -42,7 +42,8 @@ function wordDiff(originalText: string, modifiedText: string): string {
         oCurrent = originalBuffer[0];
         mCurrent = modifiedBuffer[0];
 
-        if (oCurrent === mCurrent) { //if the word agrees finalize any inserting/deleting
+        // If the word agrees (and is not undefined, which happens if buffers are empty)
+        if (oCurrent !== undefined && oCurrent === mCurrent) {
             if (deleting) {
                 outputBuffer += delBuffer + spce + delClose;
                 deleting = false;
@@ -59,7 +60,7 @@ function wordDiff(originalText: string, modifiedText: string): string {
         } else {    //If it disagrees, 
             // check if any of the next matchMax words in B agrees, 
             matchIndex = -1;
-            for (let i = 1; i < matchMax; i++) {
+            for (let i = 1; i < matchMax && i < modifiedBuffer.length; i++) {
                 if (modifiedBuffer[i] === oCurrent) {
                     matchIndex = i;
                     break;
@@ -67,6 +68,11 @@ function wordDiff(originalText: string, modifiedText: string): string {
             }
             if (matchIndex > -1) {
                 //Found---so insert words from B up to match
+                if (deleting) { // Finalize any ongoing deletion
+                    outputBuffer += delBuffer + spce + delClose;
+                    deleting = false;
+                    delBuffer = delOpen;
+                }
                 inserting = true;
                 for (let i = 0; i < matchIndex; i++) {
                     insBuffer += modifiedBuffer.shift() + spce;
@@ -74,7 +80,7 @@ function wordDiff(originalText: string, modifiedText: string): string {
             }
             else { //Check if any of the next matchMax words in A agrees
                 matchIndex = -1;
-                for (let i = 1; i < matchMax; i++) {
+                for (let i = 1; i < matchMax && i < originalBuffer.length; i++) {
                     if (originalBuffer[i] === mCurrent) {
                         matchIndex = i;
                         break;
@@ -82,6 +88,11 @@ function wordDiff(originalText: string, modifiedText: string): string {
                 }
                 if (matchIndex > -1 ) {
                     //Found---so delete words from A up to match
+                    if (inserting) { // Finalize any ongoing insertion
+                        outputBuffer += insBuffer + spce + insClose;
+                        inserting = false;
+                        insBuffer = insOpen;
+                    }
                     deleting = true;
                     for (let i = 0; i < matchIndex; i++) {
                         delBuffer += originalBuffer.shift() + spce;
@@ -89,31 +100,49 @@ function wordDiff(originalText: string, modifiedText: string): string {
                 }
                 else { //No matches anywhere delete and add if defined
                     if (oCurrent) {
+                        if (inserting) { // If switching from inserting to deleting
+                            outputBuffer += insBuffer + spce + insClose;
+                            inserting = false;
+                            insBuffer = insOpen;
+                        }
                         deleting = true;
                         delBuffer += originalBuffer.shift() + spce;
                     }
                     if (mCurrent) {
+                        if (deleting && !oCurrent) { // If switching from deleting to inserting (and oCurrent was just processed)
+                            outputBuffer += delBuffer + spce + delClose;
+                            deleting = false;
+                            delBuffer = delOpen;
+                        }
                         inserting = true;
                         insBuffer += modifiedBuffer.shift() + spce;
                     }
                 }
             }
         }
-    } while (originalBuffer[0] || modifiedBuffer[0]);
-    //Do final closure
+    // Loop as long as there are words in either buffer.
+    // The originalBuffer[0] || modifiedBuffer[0] condition works because undefined is falsy,
+    // and actual words (even empty strings, if not filtered) are truthy.
+    } while (originalBuffer.length > 0 || modifiedBuffer.length > 0);
+    //Do final closure for any pending deletions or insertions
     if (deleting) {
         outputBuffer += delBuffer + spce + delClose;
     }
     if (inserting) {
         outputBuffer += insBuffer + spce + insClose;
     }
-    return outputBuffer;
+    return outputBuffer.trimEnd(); // Optionally remove trailing space
 }
 
 // Example usage
 
+
 // const text1 = "min1 zero one too tree for fyve sevn eight nine ten fourteen fifteen";
 // const text2 = "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen";
+
+//const text1 = `Plants 400-600 mm high. Corm globose-obconic, 10-12 mm diam.; tunics cartilaginous, splitting from below into soft fibres. Stem flexed outward above sheath of second leaf, then erect again, unbranched. Leaves (2)3, lower (1)2 basal, lowermost markedly longest, reaching to ± middle of spike, centric and cross-shaped in section, midrib raised into flanges up to half as wide as blade, margins and edges of midrib wings thickened, remaining leaves without blades, second leaf sheathing lower half of stem, uppermost leaf inserted on upper 1/3 of stem, largely or entirely sheathing, margins fused below. Spike erect and ± straight, 3- to 5-flowered; bracts pale brownish green, sometimes lightly flushed purple, outer 42-60 mm long, enclosing base of upper part of tube, inner bract shorter, minutely forked, twisted to lie against outer bract. Flowers yellow-green with upper tepals flushed and veined with dusky red, reverse of tepals and tube red, somewhat streaked on tepals, lower 3 tepals sometimes speckled with minute dark red spots in lower 1/2, unscented; perianth tube 35-46 mm long, slender and cylindric below for 15-18 mm, curving abruptly into a wider cylindric part 20-28 mm long, ± 5 mm diam., ascending to almost horizontal; tepals with dorsal ovate, ascending, 15-20 x ± 12 mm, upper laterals spreading, 14-15 x ± 10 mm, lower 3 tepals much smaller, patent, subequal, ± 9 x 7 mm, directed downward. Filaments 26-32 mm long, exserted 4-8 mm from tube; anthers 8-10 mm long, light purple; pollen yellow. Style extending horizontally over stamens, dividing opposite upper 1/3 of anthers, branches 4 mm long. Capsules and seeds unknown.`
+
+//const text2 =`Plants 400–600 mm high. Corm globose-obconic, 10–12 mm diam.; tunics cartilaginous, splitting from below into soft fibres. Stem flexed outward above sheath of second leaf, then erect again, unbranched. Leaves (2)3, lower (1)2 basal, lowermost markedly longest, reaching to ± middle of spike, centric and cross-shaped in section, midrib raised into flanges up to 1/2 as wide as blade, margins and edges of midrib wings thickened; remaining leaves without blades, second leaf sheathing lower half of stem, uppermost leaf inserted on upper 1/3 of stem, largely or entirely sheathing, margins fused below. Spike erect and ± straight, 3–5-flowered; bracts pale brownish green, sometimes lightly flushed purple, outer 42–60 mm long, enclosing base of upper part of tube, inner bract shorter, minutely forked, twisted to lie against outer bract. Flowers yellow-green with upper tepals flushed and veined with dusky red, reverse of tepals and tube red, somewhat streaked on tepals, lower 3 tepals sometimes speckled with minute dark red spots in lower 1/2, unscented; perianth tube 35–46 mm long, slender and cylindric below for 15–18 mm, curving abruptly into a wider cylindric part 20–28 mm long, ± 5 mm diam., ascending to almost horizontal; tepals with dorsal ovate, ascending, 15–20 × ± 12 mm, upper laterals spreading, 14–15 × ± 10 mm, lower 3 tepals much smaller, patent, subequal, ± 9 × 7 mm, directed downward. Filaments 26–32 mm long, exserted 4–8 mm from tube; anthers 8–10 mm long, light purple; pollen yellow. Style extending horizontally over stamens, dividing opposite upper 1/3 of anthers, branches 4 mm long. Capsules and seeds unknown.`
 
 const text1 = `Plants acaulescent, with leaves in a basal rosette about 8 cm diam., proliferous from the base and forming small clusters. Leaves about 50, the young erect, incurved at the tips, the old ascending, somewhat spreading, with tips incurved, about 27 mm long, 9 mm broad, up to 5 mm thick, elongate or ovate-elongate, blue-green; upper surface flat to rounded, semi-pellucid, with 5 to 7 indistinct reticulate lines, smooth; lower surface convex, smooth, not pellucid; keel 1, often 2, centrally positioned in the upper half, the second one when present usually towards the margin, dentate; margins acute with a whitish edge visible from about the middle to the base, smooth, or with 0.5 mm long pellucid teeth; end-awn about 7 mm long, white, smooth. Inflorescence about 15 cm tall; peduncle simple, terete, about 2 mm diam., 8 cm long, bracteate; sterile bracts membranous, ovate, about 4 mm long, erect, keeled; raceme about 7 cm long, lax, with about 20 spirally arranged flowers and buds, 3 to 4 open simultaneously; floral bracts membranous, 5 mm long, deltoid, acute, keeled with reddish-brown veins, clasping the pedicels, (longer than the pedicels); pedicels 2 mm long, 1 mm diam., green, erect; perianth with brownish-green keels to the segments, 14 mm long, curved, compressed at base, funnel-shaped, segments free to the base, limb 2 lipped; posterior segments little recurved, pinkish-white, spreading, with brown veins; exterior part strongly recurved, spreading, pinkish-white with light brown veins; stamens 6 of two lengths, 8 and 9 mm long, inserted within the perianth tube; ovary 4 mm long, 2 mm diam., green; style 1 mm long, straight, white, capitate.`
 
@@ -137,4 +166,4 @@ del {color: red;}
 </html>` ;
 
 
-console.log(html); //See example.html for output
+console.log(html);
